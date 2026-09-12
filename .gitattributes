@@ -1,0 +1,6 @@
+# Never touch line endings or bytes: apt hashes and GPG sigs depend on them.
+* -text
+*.deb binary
+*.gpg binary
+*.gz binary
+*.xz binary

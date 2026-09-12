@@ -1,0 +1,243 @@
+#!/usr/bin/env bash
+# catrix - Matrix-style falling cat faces for your terminal.
+#
+# Like cmatrix, but cats. Random cat faces rain down the screen in columns,
+# default color green, bright head fading into the dark.
+#
+# Inspired by cmatrix and The Matrix Resurrections (2021).
+# Faces: melaniecebula/cat-ascii-faces (MIT) + emojicombos community combos.
+#
+# Usage: catrix [-C color] [-b|--no-bold] [-u ms] [-d pct] [update]
+# Keys:  q quit | space pause | +/- speed | c color | b bold
+set -u
+
+VERSION="1.0.0"
+COLOR_NAME="green"
+BOLD=1
+DELAY_MS=80
+DENSITY=70
+
+declare -A CODES=(
+    [green]=32 [red]=31 [blue]=34 [white]=37
+    [yellow]=33 [magenta]=35 [cyan]=36
+)
+COLOR_ORDER=(green red blue white yellow magenta cyan)
+
+FACES=(
+    "(≽^•˕•^≼)"
+    "ᨐᵐᵉᵒʷ"
+    "≽^•⩊•^≼"
+    "ฅ^>⩊<^ ฅ"
+    "(＾• ω •＾)"
+    "₍^. .^₎Ⳋ"
+    "₍^ >⩊< ^₎Ⳋ"
+    "ᓚ₍つ^. .^₎っ♡"
+    "(=ↀωↀ=)▄︻┻┳═一"
+    "(=^･^=)"
+    "(=^･ω･^=)"
+    "(=①ω①=)"
+    "(^･o･^)ﾉ”"
+    "(ΦωΦ)"
+    "d(=^･ω･^=)b"
+    "ฅ•ω•ฅ"
+    "ฅ(´・ω・｀)ฅ"
+    "(^._.^)ﾉ"
+    "ヾ(*ΦωΦ)ﾉ"
+    "ミ๏ｖ๏彡"
+    "(=ↀωↀ=)"
+    "⊱ฅ•ω•ฅ⊰"
+    "❤(´ω｀*)"
+    "V(=^･ω･^=)v"
+    "(=^ ◡ ^=)"
+    "ฅ(´-ω-\`)ฅ"
+    "(●ↀωↀ●)"
+    "(^・ω・^ )"
+)
+
+usage() {
+    cat <<'EOF'
+Usage: catrix [OPTIONS] [update]
+
+Matrix-style falling cat faces. Default color is green.
+
+Options:
+  -C, --color NAME   rain color: green red blue white yellow magenta cyan
+                     (default: green)
+  -b, --bold         bold head faces (default: on)
+      --no-bold      plain head faces
+  -u, --update-delay MS
+                     frame delay in milliseconds (default: 80, lower = faster)
+  -d, --density PCT  percent of columns that rain 0-100 (default: 70)
+  update             refresh apt metadata (cache-bypassed) and upgrade catrix
+  -V, --version      print version and exit
+  -h, --help         show this help
+
+Keys while running:
+  q / Esc   quit            space     pause / resume
+  + / -     faster / slower c         cycle rain color
+  b         toggle bold heads
+EOF
+}
+
+do_update() {
+    # Refresh from the repo's apt source, bypassing caches, then upgrade.
+    # (The timestamped Acquire options change the request in a useless way
+    # so no stale Packages/Release can be served.)
+    sudo apt-get update \
+        -o Acquire::https::No-Cache=true \
+        -o Acquire::http::No-Cache=true \
+        -o Acquire::https::Timeout=30 && \
+    sudo apt-get install -y --only-upgrade catrix
+}
+
+while [ $# -gt 0 ]; do
+    case "$1" in
+        update) do_update; exit $? ;;
+        -C|--color) COLOR_NAME="${2:-}"; shift 2 ;;
+        -C*) COLOR_NAME="${1#-C}"; shift ;;
+        --color=*) COLOR_NAME="${1#--color=}"; shift ;;
+        -b|--bold) BOLD=1; shift ;;
+        --no-bold) BOLD=0; shift ;;
+        -u|--update-delay) DELAY_MS="${2:-}"; shift 2 ;;
+        --update-delay=*) DELAY_MS="${1#--update-delay=}"; shift ;;
+        -d|--density) DENSITY="${2:-}"; shift 2 ;;
+        --density=*) DENSITY="${1#--density=}"; shift ;;
+        -V|--version) echo "catrix $VERSION"; exit 0 ;;
+        -h|--help) usage; exit 0 ;;
+        *) echo "catrix: unknown option '$1' (try --help)" >&2; exit 2 ;;
+    esac
+done
+
+if [ -z "${CODES[$COLOR_NAME]:-}" ]; then
+    echo "catrix: unknown color '$COLOR_NAME' (try --help)" >&2
+    exit 2
+fi
+case "$DELAY_MS" in ''|*[!0-9]*) echo "catrix: bad delay '$DELAY_MS'" >&2; exit 2;; esac
+case "$DENSITY" in ''|*[!0-9]*) echo "catrix: bad density '$DENSITY'" >&2; exit 2;; esac
+[ "$DENSITY" -gt 100 ] && DENSITY=100
+
+ESC=$'\e'
+RESET="${ESC}[0m"
+CODE="${CODES[$COLOR_NAME]}"
+if [ "$BOLD" -eq 1 ]; then HEAD="${ESC}[1;${CODE}m"; else HEAD="${ESC}[${CODE}m"; fi
+BODY="${ESC}[${CODE}m"
+COLOR_IDX=0
+for i in "${!COLOR_ORDER[@]}"; do
+    [ "${COLOR_ORDER[$i]}" = "$COLOR_NAME" ] && COLOR_IDX=$i
+done
+
+cleanup() {
+    tput cnorm 2>/dev/null
+    printf '%b\n' "$RESET"
+}
+trap cleanup EXIT INT TERM
+
+command -v tput >/dev/null || { echo "catrix: needs 'tput' (ncurses-bin)" >&2; exit 1; }
+tput civis
+H=$(tput lines); W=$(tput cols)
+if [ "$H" -lt 6 ] || [ "$W" -lt 24 ]; then
+    echo "catrix: terminal too small (need at least 24x6)" >&2
+    exit 1
+fi
+NFACES=${#FACES[@]}
+
+# Column state: parallel arrays over active column indexes.
+CX=() CY=() CSP=() CTK=() CTRAIL=()
+x=0
+while [ "$x" -lt $((W - 4)) ]; do
+    if [ "$((RANDOM % 100))" -lt "$DENSITY" ]; then
+        CX+=("$x")
+        CY+=("$((RANDOM % (H + 4) - H))")
+        case $((RANDOM % 4)) in 0|1) CSP+=(1) ;; 2) CSP+=(2) ;; *) CSP+=(3) ;; esac
+        CTK+=(0)
+        CTRAIL+=("")
+    fi
+    x=$((x + 5 + RANDOM % 7))
+done
+NCOL=${#CX[@]}
+
+recolor() {
+    CODE="${CODES[$COLOR_NAME]}"
+    if [ "$BOLD" -eq 1 ]; then HEAD="${ESC}[1;${CODE}m"; else HEAD="${ESC}[${CODE}m"; fi
+    BODY="${ESC}[${CODE}m"
+}
+
+PAUSED=0
+while true; do
+    key=""
+    if read -rsn1 -t "0.$((DELAY_MS / 10))$((DELAY_MS % 10))" key 2>/dev/null; then
+        case "$key" in
+            q|Q) break ;;
+            "$ESC")
+                # Lone ESC quits; ESC-prefixed sequences (arrows) are ignored.
+                if ! read -rsn1 -t 0.01 _rest 2>/dev/null; then break; fi
+                ;;
+            " ")
+                [ "$PAUSED" -eq 0 ] && PAUSED=1 || PAUSED=0
+                ;;
+            "+"|"=") DELAY_MS=$((DELAY_MS > 10 ? DELAY_MS - 10 : 10)) ;;
+            "-"|"_") DELAY_MS=$((DELAY_MS + 10)) ;;
+            c|C)
+                COLOR_IDX=$(( (COLOR_IDX + 1) % ${#COLOR_ORDER[@]} ))
+                COLOR_NAME="${COLOR_ORDER[$COLOR_IDX]}"
+                recolor
+                ;;
+            b|B)
+                [ "$BOLD" -eq 1 ] && BOLD=0 || BOLD=1
+                recolor
+                ;;
+        esac
+    fi
+    if [ "$PAUSED" -eq 1 ]; then
+        sleep 0.05
+        continue
+    fi
+    for ((i = 0; i < NCOL; i++)); do
+        CTK[$i]=$((CTK[i] + 1))
+        [ "${CTK[$i]}" -lt "${CSP[$i]}" ] && continue
+        CTK[$i]=0
+        # Split stored trail "y\x1fface\x1ey\x1fface..." into an array.
+        IFS=$'\x1e' read -r -a parts <<< "${CTRAIL[$i]}"
+        # Drop oldest beyond length 7: erase it with spaces.
+        nparts=0; for _p in "${parts[@]}"; do [ -n "$_p" ] && nparts=$((nparts + 1)); done
+        if [ "$nparts" -gt 7 ]; then
+            oldest="${parts[0]}"
+            oy="${oldest%%$'\x1f'*}"; of="${oldest#*$'\x1f'}"
+            if [ "$oy" -ge 0 ] && [ "$oy" -lt "$H" ]; then
+                tput cup "$oy" "${CX[$i]}" 2>/dev/null
+                printf '%*s' $(( ${#of} + 4 )) ''
+            fi
+            parts=("${parts[@]:1}")
+        fi
+        CY[$i]=$((CY[i] + 1))
+        if [ "${CY[$i]}" -gt $((H + 7)) ]; then
+            CY[$i]=$((RANDOM % 10 - 9))
+            CTRAIL[$i]=""
+            continue
+        fi
+        face="${FACES[$((RANDOM % NFACES))]}"
+        # Redraw previous head dim, draw new head bright.
+        if [ "$nparts" -gt 0 ]; then
+            prev="${parts[$((nparts - 1))]}"
+            [ -z "$prev" ] && prev="${parts[$((nparts - 2))]:-}"
+            if [ -n "$prev" ]; then
+                py="${prev%%$'\x1f'*}"; pf="${prev#*$'\x1f'}"
+                if [ "$py" -ge 0 ] && [ "$py" -lt "$H" ]; then
+                    tput cup "$py" "${CX[$i]}" 2>/dev/null
+                    printf '%b%s%b' "$BODY" "$pf" "$RESET"
+                fi
+            fi
+        fi
+        if [ "${CY[$i]}" -ge 0 ] && [ "${CY[$i]}" -lt "$H" ]; then
+            tput cup "${CY[$i]}" "${CX[$i]}" 2>/dev/null
+            printf '%b%s%b' "$HEAD" "$face" "$RESET"
+        fi
+        parts+=("${CY[$i]}"$'\x1f'"$face")
+        # Rejoin trail.
+        trail=""
+        for _p in "${parts[@]}"; do
+            [ -n "$_p" ] && trail="${trail}${_p}"$'\x1e'
+        done
+        CTRAIL[$i]="$trail"
+    done
+done
