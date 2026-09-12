@@ -198,8 +198,9 @@ while true; do
         CTK[$i]=0
         # Split stored trail "y\x1fface\x1ey\x1fface..." into an array.
         IFS=$'\x1e' read -r -a parts <<< "${CTRAIL[$i]}"
-        # Drop oldest beyond length 7: erase it with spaces.
-        nparts=0; for _p in "${parts[@]}"; do [ -n "$_p" ] && nparts=$((nparts + 1)); done
+        # NOTE: read drops the trailing empty field, so element count
+        # always equals entry count here; never index with a stale count.
+        nparts=${#parts[@]}
         if [ "$nparts" -gt 7 ]; then
             oldest="${parts[0]}"
             oy="${oldest%%$'\x1f'*}"; of="${oldest#*$'\x1f'}"
@@ -217,9 +218,8 @@ while true; do
         fi
         face="${FACES[$((RANDOM % NFACES))]}"
         # Redraw previous head dim, draw new head bright.
-        if [ "$nparts" -gt 0 ]; then
-            prev="${parts[$((nparts - 1))]}"
-            [ -z "$prev" ] && prev="${parts[$((nparts - 2))]:-}"
+        if [ "${#parts[@]}" -gt 0 ]; then
+            prev="${parts[$((${#parts[@]} - 1))]}"
             if [ -n "$prev" ]; then
                 py="${prev%%$'\x1f'*}"; pf="${prev#*$'\x1f'}"
                 if [ "$py" -ge 0 ] && [ "$py" -lt "$H" ]; then
