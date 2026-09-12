@@ -11,10 +11,10 @@
 # Keys:  q quit | space pause | +/- speed | c color | b bold
 set -u
 
-VERSION="1.0.0"
+VERSION="1.0.3"
 COLOR_NAME="green"
 BOLD=1
-DELAY_MS=80
+DELAY_MS=21
 DENSITY=70
 
 declare -A CODES=(
@@ -66,7 +66,7 @@ Options:
   -b, --bold         bold head faces (default: on)
       --no-bold      plain head faces
   -u, --update-delay MS
-                     frame delay in milliseconds (default: 80, lower = faster)
+                     frame delay in milliseconds (default: 21, lower = faster)
   -d, --density PCT  percent of columns that rain 0-100 (default: 70)
   update             refresh apt metadata (cache-bypassed) and upgrade catrix
   -V, --version      print version and exit
@@ -128,9 +128,12 @@ done
 
 cleanup() {
     tput cnorm 2>/dev/null
+    stty sane 2>/dev/null
     printf '%b\n' "$RESET"
 }
-trap cleanup EXIT INT TERM
+# Ctrl+C / kill always restores the terminal and exits (130 = SIGINT).
+trap cleanup EXIT
+trap 'cleanup; exit 130' INT TERM
 
 command -v tput >/dev/null || { echo "catrix: needs 'tput' (ncurses-bin)" >&2; exit 1; }
 tput civis
