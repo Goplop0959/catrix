@@ -47,17 +47,23 @@ def make_ar(members):
 
 
 def tar_bytes(files, compress):
-    """files: list of (arcname, bytes, mode). Returns (gz|xz) bytes."""
+    """files: list of (arcname, bytes|None, mode). None data = directory entry
+    (dpkg only creates parent dirs listed in the archive!)."""
     buf = io.BytesIO()
     mode = "w:gz" if compress == "gz" else "w:xz"
     with tarfile.open(fileobj=buf, mode=mode, pax_headers={}) as tf:
         for arcname, data, fmode in files:
             ti = tarfile.TarInfo(arcname)
-            ti.size = len(data)
             ti.mtime = MTIME
             ti.uid = ti.gid = 0
             ti.uname = ti.gname = "root"
             ti.mode = fmode
+            if data is None:
+                ti.type = tarfile.DIRTYPE
+                ti.size = 0
+                tf.addfile(ti)
+                continue
+            ti.size = len(data)
             tf.addfile(ti, io.BytesIO(data))
     return buf.getvalue()
 
@@ -96,6 +102,12 @@ def build_deb(root, version):
     ).encode() + license_text
 
     data_files = [
+        ("./", None, 0o755),
+        ("./usr/", None, 0o755),
+        ("./usr/bin/", None, 0o755),
+        ("./usr/share/", None, 0o755),
+        ("./usr/share/doc/", None, 0o755),
+        ("./usr/share/doc/catrix/", None, 0o755),
         ("./usr/bin/catrix", script, 0o755),
         ("./usr/share/doc/catrix/copyright", copyright_text, 0o644),
         ("./usr/share/doc/catrix/README.md", readme, 0o644),
@@ -104,7 +116,7 @@ def build_deb(root, version):
     data_blob = tar_bytes(data_files, "xz")
     md5sums = "".join(
         "%s  %s\n" % (hashlib.md5(d).hexdigest(), n.lstrip("./"))
-        for n, d, _ in data_files
+        for n, d, _ in data_files if d is not None
     ).encode()
     control_files = [
         ("./control", control, 0o644),
