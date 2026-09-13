@@ -11,7 +11,7 @@
 # Keys:  q quit | space pause | +/- speed | c color | b bold
 set -u
 
-VERSION="1.0.9"
+VERSION="1.0.10"
 COLOR_NAME="green"
 BOLD=1
 DELAY_MS=5
@@ -273,7 +273,14 @@ while true; do
             CTRAIL[$i]=""
             continue
         fi
-        face="${FACES[$((RANDOM % NFACES))]}"
+        # New head each tick: a random cat, or (about 1 time in 5) no cat
+        # at all, leaving a gap. Same cats keep falling in the same order;
+        # the bottom entry is dropped once past the screen.
+        if [ "$((RANDOM % 100))" -lt 22 ]; then
+            face=""
+        else
+            face="${FACES[$((RANDOM % NFACES))]}"
+        fi
         # Redraw previous head dim, draw new head bright.
         if [ "${#parts[@]}" -gt 0 ]; then
             prev="${parts[$((${#parts[@]} - 1))]}"
