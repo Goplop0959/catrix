@@ -11,7 +11,7 @@
 # Keys:  q quit | space pause | +/- speed | c color | b bold
 set -u
 
-VERSION="1.0.7"
+VERSION="1.0.8"
 COLOR_NAME="green"
 BOLD=1
 DELAY_MS=5
@@ -144,9 +144,10 @@ for i in "${!COLOR_ORDER[@]}"; do
 done
 
 cleanup() {
-    # Leave the alternate screen first: the terminal comes back exactly
-    # as it was (previous commands visible, no cats left behind).
-    [ "${ALTSCREEN:-0}" -eq 1 ] && tput rmcup 2>/dev/null
+    # Main screen only (no alternate screen): wipe the rain away so no
+    # cats are left behind. History and scrollback are untouched, so all
+    # previous commands are still there (scroll up to see them).
+    clear 2>/dev/null
     tput cnorm 2>/dev/null
     stty sane 2>/dev/null
     printf '%b\n' "$RESET"
@@ -156,9 +157,8 @@ trap cleanup EXIT
 trap 'cleanup; exit 130' INT TERM
 
 command -v tput >/dev/null || { echo "catrix: needs 'tput' (ncurses-bin)" >&2; exit 1; }
-# Fullscreen on the alternate screen: rain fills the whole terminal while
-# running, and quitting restores the previous screen (commands) exactly.
-if tput smcup 2>/dev/null; then ALTSCREEN=1; else ALTSCREEN=0; fi
+# Fullscreen rain on the main screen (never the alternate screen).
+# Old content scrolls into scrollback intact; quit clears the rain away.
 clear
 tput civis
 H=$(tput lines); W=$(tput cols)
