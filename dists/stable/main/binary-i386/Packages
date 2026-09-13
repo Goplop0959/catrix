@@ -1,13 +1,13 @@
 Package: catrix
-Version: 1.0.10
+Version: 1.0.11
 Architecture: all
 Maintainer: Powerentity <43914558+Goplop0959@users.noreply.github.com>
 Depends: bash, python3
 Recommends: sudo
 Homepage: https://github.com/Goplop0959/Catrix
-Filename: pool/main/c/catrix/catrix_1.0.10_all.deb
-Size: 7202
-MD5sum: 4abb0d58ec42bec7df073aa314043e38
-SHA1: 3ff68f45c1e9310cffb6cff5e2cff6aa201b390a
-SHA256: 608e75ed61fd30520acfe1ac30ef045b2a6fbe733b40361afab691e26a58f62a
+Filename: pool/main/c/catrix/catrix_1.0.11_all.deb
+Size: 7410
+MD5sum: 0576da735c9a173383bd1a52bdbed57c
+SHA1: 8462fe29e109dce27e096f45157035e1006b7415
+SHA256: 5903328263eebdece2ed13fe0e051a722ccb3d1f9e61b1c05255d77583cd8eb2
 Description: Matrix-style falling cat faces for your terminal

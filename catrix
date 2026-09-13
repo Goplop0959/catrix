@@ -11,7 +11,7 @@
 # Keys:  q quit | space pause | +/- speed | c color | b bold
 set -u
 
-VERSION="1.0.10"
+VERSION="1.0.11"
 COLOR_NAME="green"
 BOLD=1
 DELAY_MS=5
@@ -176,6 +176,8 @@ declare -A FW=() FERASE=()
 MAXW=0
 if command -v python3 >/dev/null 2>&1; then
     while IFS=$'\t' read -r _wf _ww; do
+        # Strip CR: Windows/Cygwin python emits CRLF into the pipe.
+        _wf=${_wf%$'\r'}; _ww=${_ww%$'\r'}
         FW[$_wf]=$_ww
         [ "$_ww" -gt "$MAXW" ] && MAXW=$_ww
         FERASE[$_wf]=$(printf '%*s' "$_ww" '')
@@ -261,7 +263,7 @@ while true; do
         if [ "$nparts" -gt 7 ]; then
             oldest="${parts[0]}"
             oy="${oldest%%$'\x1f'*}"; of="${oldest#*$'\x1f'}"
-            if [ "$oy" -ge 0 ] && [ "$oy" -lt "$H" ]; then
+            if [ -n "$of" ] && [ "$oy" -ge 0 ] && [ "$oy" -lt "$H" ]; then
                 tput cup "$oy" "${CX[$i]}" 2>/dev/null
                 printf '%s' "${FERASE[$of]:-$(printf '%*s' $(( ${#of} + 4 )) '')}"
             fi
@@ -269,6 +271,18 @@ while true; do
         fi
         CY[$i]=$((CY[i] + 1))
         if [ "${CY[$i]}" -gt $((H + 7)) ]; then
+            # Wipe any still-visible trail first: otherwise those rows
+            # stay stuck until a later cycle happens to overwrite them.
+            IFS=$'\x1e' read -r -a _rp <<< "${CTRAIL[$i]}"
+            for _re in "${_rp[@]}"; do
+                [ -n "$_re" ] || continue
+                _ry="${_re%%$'\x1f'*}"; _rf="${_re#*$'\x1f'}"
+                [ -n "$_rf" ] || continue
+                if [ "$_ry" -ge 0 ] && [ "$_ry" -lt "$H" ]; then
+                    tput cup "$_ry" "${CX[$i]}" 2>/dev/null
+                    printf '%s' "${FERASE[$_rf]:-$(printf '%*s' $(( ${#_rf} + 4 )) '')}"
+                fi
+            done
             CY[$i]=$((RANDOM % 10 - 9))
             CTRAIL[$i]=""
             continue
@@ -286,13 +300,13 @@ while true; do
             prev="${parts[$((${#parts[@]} - 1))]}"
             if [ -n "$prev" ]; then
                 py="${prev%%$'\x1f'*}"; pf="${prev#*$'\x1f'}"
-                if [ "$py" -ge 0 ] && [ "$py" -lt "$H" ]; then
+                if [ -n "$pf" ] && [ "$py" -ge 0 ] && [ "$py" -lt "$H" ]; then
                     tput cup "$py" "${CX[$i]}" 2>/dev/null
                     printf '%b%s%b' "$BODY" "$pf" "$RESET"
                 fi
             fi
         fi
-        if [ "${CY[$i]}" -ge 0 ] && [ "${CY[$i]}" -lt "$H" ]; then
+        if [ -n "$face" ] && [ "${CY[$i]}" -ge 0 ] && [ "${CY[$i]}" -lt "$H" ]; then
             tput cup "${CY[$i]}" "${CX[$i]}" 2>/dev/null
             printf '%b%s%b' "$HEAD" "$face" "$RESET"
         fi
