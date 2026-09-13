@@ -11,7 +11,7 @@
 # Keys:  q quit | space pause | +/- speed | c color | b bold
 set -u
 
-VERSION="1.0.5"
+VERSION="1.0.6"
 COLOR_NAME="green"
 BOLD=1
 DELAY_MS=5
@@ -81,13 +81,30 @@ EOF
 
 do_update() {
     # Refresh from the repo's apt source, bypassing caches, then upgrade.
-    # (The timestamped Acquire options change the request in a useless way
-    # so no stale Packages/Release can be served.)
-    sudo apt-get update \
+    # (The No-Cache directives change the request in a useless way so no
+    # stale Packages/Release can be served.)
+    if ! sudo apt-get update \
         -o Acquire::https::No-Cache=true \
-        -o Acquire::http::No-Cache=true \
-        -o Acquire::https::Timeout=30 && \
+        -o Acquire::http::No-Cache=true; then
+        _update_abort_banner
+        return 1
+    fi
     sudo apt-get install -y --only-upgrade catrix
+}
+
+_update_abort_banner() {
+    local RED=$'\e[1;31m' RESET=$'\e[0m'
+    printf '%b\n' "$RED"
+    cat <<'EOF'
+  ############################################################
+  #                                                          #
+  #     KEY VERIFICATION FAILED                              #
+  #     THE REPO MIGHT BE HACKED                             #
+  #     ABORTING THE UPDATE IMMEDIATELY!!!                   #
+  #                                                          #
+  ############################################################
+EOF
+    printf '%b' "$RESET"
 }
 
 while [ $# -gt 0 ]; do
