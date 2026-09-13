@@ -88,7 +88,7 @@ def build_deb(root, version):
         "Priority: optional\n"
         "Architecture: all\n"
         "Maintainer: %s\n"
-        "Depends: bash\n"
+        "Depends: bash, python3\n"
         "Recommends: sudo\n"
         "Homepage: %s\n"
         "Description: Matrix-style falling cat faces for your terminal\n"
@@ -174,7 +174,7 @@ def main():
         "Version: %s\n"
         "Architecture: all\n"
         "Maintainer: %s\n"
-        "Depends: bash\n"
+        "Depends: bash, python3\n"
         "Recommends: sudo\n"
         "Homepage: %s\n"
         "Filename: %s\n" % (args.version, MAINTAINER, HOMEPAGE, deb_rel)

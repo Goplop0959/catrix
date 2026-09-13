@@ -11,7 +11,7 @@
 # Keys:  q quit | space pause | +/- speed | c color | b bold
 set -u
 
-VERSION="1.0.8"
+VERSION="1.0.9"
 COLOR_NAME="green"
 BOLD=1
 DELAY_MS=5
@@ -168,6 +168,33 @@ if [ "$H" -lt 6 ] || [ "$W" -lt 24 ]; then
 fi
 NFACES=${#FACES[@]}
 
+# Cell widths via python3 (a declared package dependency): East-Asian
+# wide/fullwidth glyphs count 2 cells, combining marks count 0. Without
+# python3 we fall back to character count. Erase strings are prebuilt so
+# the hot loop never spawns a subshell.
+declare -A FW=() FERASE=()
+MAXW=0
+if command -v python3 >/dev/null 2>&1; then
+    while IFS=$'\t' read -r _wf _ww; do
+        FW[$_wf]=$_ww
+        [ "$_ww" -gt "$MAXW" ] && MAXW=$_ww
+        FERASE[$_wf]=$(printf '%*s' "$_ww" '')
+    done < <(printf '%s\n' "${FACES[@]}" | python3 -c '
+import sys, unicodedata
+for line in sys.stdin:
+    line = line.rstrip("\n")
+    if not line:
+        continue
+    n = 0
+    for ch in line:
+        if unicodedata.category(ch) in ("Me", "Mn"):
+            continue
+        n += 2 if unicodedata.east_asian_width(ch) in ("W", "F") else 1
+    print("%s\t%d" % (line, n))
+')
+fi
+[ "$MAXW" -lt 1 ] && MAXW=12
+
 # Column state: parallel arrays over active column indexes.
 CX=() CY=() CSP=() CTK=() CTRAIL=()
 x=0
@@ -179,7 +206,7 @@ while [ "$x" -lt $((W - 2)) ]; do
         CTK+=(0)
         CTRAIL+=("")
     fi
-    x=$((x + 5 + RANDOM % 7))
+    x=$((x + MAXW + 2 + RANDOM % 4))
 done
 NCOL=${#CX[@]}
 
@@ -236,7 +263,7 @@ while true; do
             oy="${oldest%%$'\x1f'*}"; of="${oldest#*$'\x1f'}"
             if [ "$oy" -ge 0 ] && [ "$oy" -lt "$H" ]; then
                 tput cup "$oy" "${CX[$i]}" 2>/dev/null
-                printf '%*s' $(( ${#of} + 4 )) ''
+                printf '%s' "${FERASE[$of]:-$(printf '%*s' $(( ${#of} + 4 )) '')}"
             fi
             parts=("${parts[@]:1}")
         fi

@@ -2,34 +2,34 @@ Origin: Catrix
 Label: Catrix
 Suite: stable
 Codename: stable
-Date: Sun, 13 Sep 2026 00:06:07 UTC
+Date: Sun, 13 Sep 2026 19:13:41 UTC
 Architectures: amd64 arm64 armhf i386
 Components: main
 Description: Catrix apt repository
 MD5Sum:
- 20ee45872297051cde7a9a9bf791a581      482 main/binary-amd64/Packages
- a612e9a4cec84c50846ce57863ad0842      364 main/binary-amd64/Packages.gz
- 20ee45872297051cde7a9a9bf791a581      482 main/binary-arm64/Packages
- a612e9a4cec84c50846ce57863ad0842      364 main/binary-arm64/Packages.gz
- 20ee45872297051cde7a9a9bf791a581      482 main/binary-armhf/Packages
- a612e9a4cec84c50846ce57863ad0842      364 main/binary-armhf/Packages.gz
- 20ee45872297051cde7a9a9bf791a581      482 main/binary-i386/Packages
- a612e9a4cec84c50846ce57863ad0842      364 main/binary-i386/Packages.gz
+ 4d1faf5bcc6111d6cac33c3c4c0b0b25      491 main/binary-amd64/Packages
+ 54a3752ab12abb767cfe19ed92d16636      370 main/binary-amd64/Packages.gz
+ 4d1faf5bcc6111d6cac33c3c4c0b0b25      491 main/binary-arm64/Packages
+ 54a3752ab12abb767cfe19ed92d16636      370 main/binary-arm64/Packages.gz
+ 4d1faf5bcc6111d6cac33c3c4c0b0b25      491 main/binary-armhf/Packages
+ 54a3752ab12abb767cfe19ed92d16636      370 main/binary-armhf/Packages.gz
+ 4d1faf5bcc6111d6cac33c3c4c0b0b25      491 main/binary-i386/Packages
+ 54a3752ab12abb767cfe19ed92d16636      370 main/binary-i386/Packages.gz
 SHA1:
- f87f0dc99aa9c685da1546418da0c45de6d7e49c      482 main/binary-amd64/Packages
- f14b78375efafe79ea8921be81bc12ab08b31c66      364 main/binary-amd64/Packages.gz
- f87f0dc99aa9c685da1546418da0c45de6d7e49c      482 main/binary-arm64/Packages
- f14b78375efafe79ea8921be81bc12ab08b31c66      364 main/binary-arm64/Packages.gz
- f87f0dc99aa9c685da1546418da0c45de6d7e49c      482 main/binary-armhf/Packages
- f14b78375efafe79ea8921be81bc12ab08b31c66      364 main/binary-armhf/Packages.gz
- f87f0dc99aa9c685da1546418da0c45de6d7e49c      482 main/binary-i386/Packages
- f14b78375efafe79ea8921be81bc12ab08b31c66      364 main/binary-i386/Packages.gz
+ 7f64d9ee054166f1e1b6d9ca5531038a17b3abeb      491 main/binary-amd64/Packages
+ cbf9b183cb43c96eda3a23939242d6f300cfc0a2      370 main/binary-amd64/Packages.gz
+ 7f64d9ee054166f1e1b6d9ca5531038a17b3abeb      491 main/binary-arm64/Packages
+ cbf9b183cb43c96eda3a23939242d6f300cfc0a2      370 main/binary-arm64/Packages.gz
+ 7f64d9ee054166f1e1b6d9ca5531038a17b3abeb      491 main/binary-armhf/Packages
+ cbf9b183cb43c96eda3a23939242d6f300cfc0a2      370 main/binary-armhf/Packages.gz
+ 7f64d9ee054166f1e1b6d9ca5531038a17b3abeb      491 main/binary-i386/Packages
+ cbf9b183cb43c96eda3a23939242d6f300cfc0a2      370 main/binary-i386/Packages.gz
 SHA256:
- 57b66295a341fd977e6d26389d42d00190d82d2c9ed6d87801c7ae024e41f64a      482 main/binary-amd64/Packages
- 1be9f5e3c2947f6de6a3e9801e49ee2bd3bbe4201550787a16b0abd6d23180b8      364 main/binary-amd64/Packages.gz
- 57b66295a341fd977e6d26389d42d00190d82d2c9ed6d87801c7ae024e41f64a      482 main/binary-arm64/Packages
- 1be9f5e3c2947f6de6a3e9801e49ee2bd3bbe4201550787a16b0abd6d23180b8      364 main/binary-arm64/Packages.gz
- 57b66295a341fd977e6d26389d42d00190d82d2c9ed6d87801c7ae024e41f64a      482 main/binary-armhf/Packages
- 1be9f5e3c2947f6de6a3e9801e49ee2bd3bbe4201550787a16b0abd6d23180b8      364 main/binary-armhf/Packages.gz
- 57b66295a341fd977e6d26389d42d00190d82d2c9ed6d87801c7ae024e41f64a      482 main/binary-i386/Packages
- 1be9f5e3c2947f6de6a3e9801e49ee2bd3bbe4201550787a16b0abd6d23180b8      364 main/binary-i386/Packages.gz
+ 209062d43fd9c763bc4669fdd13c7f3350e7d9548563c1cf95e7f8662f9cab03      491 main/binary-amd64/Packages
+ b385ed26a799f4f99ab8a7c6240258d10d518a81437ccee23415dee6212e2de9      370 main/binary-amd64/Packages.gz
+ 209062d43fd9c763bc4669fdd13c7f3350e7d9548563c1cf95e7f8662f9cab03      491 main/binary-arm64/Packages
+ b385ed26a799f4f99ab8a7c6240258d10d518a81437ccee23415dee6212e2de9      370 main/binary-arm64/Packages.gz
+ 209062d43fd9c763bc4669fdd13c7f3350e7d9548563c1cf95e7f8662f9cab03      491 main/binary-armhf/Packages
+ b385ed26a799f4f99ab8a7c6240258d10d518a81437ccee23415dee6212e2de9      370 main/binary-armhf/Packages.gz
+ 209062d43fd9c763bc4669fdd13c7f3350e7d9548563c1cf95e7f8662f9cab03      491 main/binary-i386/Packages
+ b385ed26a799f4f99ab8a7c6240258d10d518a81437ccee23415dee6212e2de9      370 main/binary-i386/Packages.gz
